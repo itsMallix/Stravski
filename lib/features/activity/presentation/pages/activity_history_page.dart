@@ -16,11 +16,25 @@ class ActivityHistoryPage extends StatefulWidget {
 }
 
 class _ActivityHistoryPageState extends State<ActivityHistoryPage> {
+
+  void _load() {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (uid.isNotEmpty) {
+      context.read<ActivityBloc>().add(ActivitiesLoadRequested(userId: uid));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    context.read<ActivityBloc>().add(ActivitiesLoadRequested(userId: uid));
+    _load();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-load every time this page becomes active (e.g. popping from detail)
+    _load();
   }
 
   @override
@@ -59,6 +73,10 @@ class _ActivityHistoryPageState extends State<ActivityHistoryPage> {
               ),
             );
           }
+          // If state changed to something else (e.g. detail loaded), reload
+          if (state is! ActivityLoading) {
+            WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+          }
           return const _EmptyState();
         },
       ),
@@ -85,12 +103,15 @@ class _EmptyState extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   )),
           const SizedBox(height: 8),
-          Text('Start recording to see your history',
-              style: TextStyle(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.5))),
+          Text(
+            'Start recording to see your history',
+            style: TextStyle(
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.5),
+            ),
+          ),
         ],
       ),
     );

@@ -45,6 +45,7 @@ dependencies:
   xml: ^6.5.0
   image_picker: ^1.1.2
   path_provider: ^2.1.5
+  flutter_svg: ^2.2.4
 
   # Fonts
   google_fonts: ^6.2.1
@@ -62,3 +63,5 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/icons/
+    - assets/widgets/

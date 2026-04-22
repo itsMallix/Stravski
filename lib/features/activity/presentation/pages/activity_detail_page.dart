@@ -9,6 +9,7 @@ import '../bloc/activity_event.dart';
 import '../bloc/activity_state.dart';
 import '../../domain/entities/activity_entity.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/theme/map_style.dart';
 
 class ActivityDetailPage extends StatefulWidget {
   final String activityId;
@@ -27,9 +28,9 @@ class _ActivityDetailPageState extends State<ActivityDetailPage> {
   @override
   void initState() {
     super.initState();
-    context
-        .read<ActivityBloc>()
-        .add(ActivityDetailRequested(activityId: widget.activityId));
+    context.read<ActivityBloc>().add(
+          ActivityDetailRequested(activityId: widget.activityId),
+        );
   }
 
   @override
@@ -74,7 +75,6 @@ class _ActivityDetailPageState extends State<ActivityDetailPage> {
 
     return CustomScrollView(
       slivers: [
-        // ── App bar with map ──────────────────────────────────────
         SliverAppBar(
           expandedHeight: 300,
           pinned: true,
@@ -82,6 +82,7 @@ class _ActivityDetailPageState extends State<ActivityDetailPage> {
             background: GoogleMap(
               onMapCreated: (ctrl) {
                 _mapController = ctrl;
+                ctrl.setMapStyle(AppMapStyle.darkStyle);
                 if (polylinePoints.isNotEmpty) {
                   ctrl.animateCamera(CameraUpdate.newLatLngBounds(
                     _boundsFromPoints(polylinePoints),
@@ -121,7 +122,6 @@ class _ActivityDetailPageState extends State<ActivityDetailPage> {
             ),
           ],
         ),
-
         SliverPadding(
           padding: const EdgeInsets.all(16),
           sliver: SliverList(
@@ -144,13 +144,16 @@ class _ActivityDetailPageState extends State<ActivityDetailPage> {
                   Text(
                     formatDateTime(activity.startTime),
                     style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.5),
                         fontSize: 13),
                   ),
                   const SizedBox(width: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(8),
@@ -209,7 +212,8 @@ class _ActivityDetailPageState extends State<ActivityDetailPage> {
   Future<void> _saveGpxFile(String content, BuildContext context) async {
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/activity_${DateTime.now().millisecondsSinceEpoch}.gpx');
+      final file = File(
+          '${dir.path}/activity_${DateTime.now().millisecondsSinceEpoch}.gpx');
       await file.writeAsString(content);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -236,8 +240,8 @@ class _StatsGrid extends StatelessWidget {
     final stats = [
       _StatData('Distance', formatDistance(activity.distanceMeters),
           Icons.straighten_rounded),
-      _StatData('Duration', formatDuration(activity.duration),
-          Icons.timer_outlined),
+      _StatData(
+          'Duration', formatDuration(activity.duration), Icons.timer_outlined),
       _StatData('Avg Pace', formatPace(activity.averagePaceMinPerKm),
           Icons.speed_rounded),
       _StatData('Avg Speed', formatSpeed(activity.averageSpeedKmH),

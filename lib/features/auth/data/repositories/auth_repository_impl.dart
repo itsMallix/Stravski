@@ -31,8 +31,13 @@ class AuthRepositoryImpl implements AuthRepository {
       if (doc.exists) {
         return UserModel.fromFirestore(doc.data()!, uid);
       }
-      return _userFromFirebase(credential.user!);
+      // Dokumen Firestore tidak ada → akun dianggap tidak aktif, tolak login
+      await _firebaseAuth.signOut();
+      throw AuthException(message: 'Akun tidak ditemukan atau telah dihapus');
     } on fb.FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        throw AuthException(message: 'invalid credential');
+      }
       throw AuthException(message: e.message ?? 'Sign in failed');
     }
   }
@@ -70,10 +75,23 @@ class AuthRepositoryImpl implements AuthRepository {
     final user = _firebaseAuth.currentUser;
     if (user == null) return null;
     try {
-      final doc = await _firestore.collection('users').doc(user.uid).get();
-      if (doc.exists) return UserModel.fromFirestore(doc.data()!, user.uid);
-    } catch (_) {}
-    return _userFromFirebase(user);
+      // Force a server-side token refresh. Throws if the account was deleted.
+      await user.reload();
+      final refreshedUser = _firebaseAuth.currentUser;
+      if (refreshedUser == null) return null;
+
+      final doc = await _firestore.collection('users').doc(refreshedUser.uid).get();
+      if (doc.exists) return UserModel.fromFirestore(doc.data()!, refreshedUser.uid);
+      return _userFromFirebase(refreshedUser);
+    } on fb.FirebaseAuthException catch (e) {
+      // Account was deleted or token is invalid — sign out locally
+      if (e.code == 'user-not-found' || e.code == 'user-disabled' || e.code == 'invalid-user-token') {
+        await _firebaseAuth.signOut();
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   @override

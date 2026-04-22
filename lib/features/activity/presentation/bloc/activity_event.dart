@@ -29,6 +29,14 @@ class ActivityStopTracking extends ActivityEvent {
   const ActivityStopTracking();
 }
 
+class ActivityTick extends ActivityEvent {
+  const ActivityTick();
+}
+
+class ActivityResetRequested extends ActivityEvent {
+  const ActivityResetRequested();
+}
+
 class ActivityLocationUpdated extends ActivityEvent {
   final double latitude;
   final double longitude;

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stravski/app/shell/custom_widgets.dart';
+import 'package:stravski/core/theme/app_theme.dart';
 
 import '../../core/constants/app_routes.dart';
 
@@ -65,15 +67,33 @@ class HomeShell extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: currentIndex == 0
-          ? FloatingActionButton.extended(
-              onPressed: () => context.push(AppRoutes.record),
-              backgroundColor: colorScheme.primary,
-              icon: const Icon(Icons.play_arrow_rounded, color: Colors.white),
-              label: const Text('Start Run',
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w700)),
+          ? GestureDetector(
+              onTap: () => context.push(AppRoutes.record),
+              child: CustomPaint(
+                painter: CustomRecordButton(),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.play_arrow_rounded, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text(
+                        'Start Run',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             )
           : null,
     );

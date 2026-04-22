@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stravski/core/theme/app_theme.dart';
+import 'package:stravski/features/home/widgets/custom_bg.dart';
 
 import '../../../activity/presentation/bloc/activity_bloc.dart';
 import '../../../activity/presentation/bloc/activity_event.dart';
@@ -17,12 +21,28 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  DateTime _selectedDay = DateTime.now();
+
+  String get _userId => FirebaseAuth.instance.currentUser?.uid ?? '';
+
+  void _load() {
+    final uid = _userId;
+    if (uid.isNotEmpty) {
+      context.read<ActivityBloc>().add(ActivitiesLoadRequested(userId: uid));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    context
-        .read<ActivityBloc>()
-        .add(const ActivitiesLoadRequested(userId: 'demo_user'));
+    _load();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-load whenever the page becomes active again
+    _load();
   }
 
   @override
@@ -40,6 +60,9 @@ class _HomePageState extends State<HomePage> {
       body: SafeArea(
         child: BlocBuilder<ActivityBloc, ActivityState>(
           builder: (context, state) {
+            if (state is! ActivitiesLoaded && state is! ActivityLoading) {
+              WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+            }
             final activities = state is ActivitiesLoaded
                 ? state.activities
                 : <ActivityEntity>[];
@@ -88,34 +111,53 @@ class _HomePageState extends State<HomePage> {
                 SliverAppBar(
                   expandedHeight: 0,
                   floating: true,
-                  backgroundColor: colorScheme.surface,
+                  // backgroundColor: AppTheme.mainred,
+                  backgroundColor: Colors.transparent,
                   elevation: 0,
+
+                  // ── Profile di kiri ─────────────────────────
+                  leading: Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: CircleAvatar(
+                      backgroundColor: colorScheme.primaryContainer,
+                      child: Text(
+                        'S',
+                        style: TextStyle(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  leadingWidth: 56,
+
+                  // ── Greeting + App Name ─────────────────────
+                  titleSpacing: 8,
                   title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(greeting,
-                          style: TextStyle(
-                              fontSize: 13,
-                              color: colorScheme.onSurface
-                                  .withValues(alpha: 0.5))),
-                      Text('Stravski Runner',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w800)),
+                      Text(
+                        greeting,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      Text(
+                        'Stravski Runner',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
                     ],
                   ),
                   actions: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 16),
-                      child: CircleAvatar(
-                        backgroundColor: colorScheme.primaryContainer,
-                        child: Text('S',
-                            style: TextStyle(
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.w700)),
-                      ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.notifications_none_rounded),
                     ),
+                    const SizedBox(width: 8),
                   ],
                 ),
 
@@ -134,26 +176,54 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(height: 16),
 
                         // ── Streak + Weekly volume ─────────────────────
-                        Row(
+                        Stack(
                           children: [
-                            Expanded(
-                              child: _StatMiniCard(
-                                icon: Icons.local_fire_department_rounded,
-                                iconColor: Colors.orange,
-                                label: 'Day Streak',
-                                value: '$streak',
-                                unit: 'days',
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: () {},
+                                child: CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: AppTheme.mainred,
+                                  child: const Icon(Icons.whatshot_rounded,
+                                      size: 16, color: Colors.white),
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _StatMiniCard(
-                                icon: Icons.straighten_rounded,
-                                iconColor: colorScheme.primary,
-                                label: 'This Week',
-                                value: formatDistance(weeklyDistance),
-                                unit: '',
+                            Positioned.fill(
+                              child: SvgPicture.asset(
+                                'assets/widgets/statisticbg.svg',
+                                fit: BoxFit.fill,
+                                colorFilter: ColorFilter.mode(
+                                    AppTheme.lightOrange.withValues(alpha: 0.5),
+                                    BlendMode.srcIn),
                               ),
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _StatMiniCard(
+                                    icon: Icons.local_fire_department_rounded,
+                                    iconColor: AppTheme.mainOrange,
+                                    label: 'Day Streak',
+                                    value: '$streak',
+                                    unit: 'days',
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Center(
+                                    child: _StatMiniCard(
+                                      icon: Icons.straighten_rounded,
+                                      iconColor: AppTheme.mainOrange,
+                                      label: 'This Week',
+                                      value: formatDistance(weeklyDistance),
+                                      unit: '',
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -162,6 +232,17 @@ class _HomePageState extends State<HomePage> {
                         // ── Weekly volume bar chart ────────────────────
                         _WeeklyVolumeChart(
                           activities: activities,
+                          colorScheme: colorScheme,
+                          selectedDay: _selectedDay,
+                          onDayTapped: (day) =>
+                              setState(() => _selectedDay = day),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // ── Activities for selected day ──────────────────
+                        _DayActivitiesList(
+                          activities: activities,
+                          selectedDay: _selectedDay,
                           colorScheme: colorScheme,
                         ),
                         const SizedBox(height: 20),
@@ -184,8 +265,6 @@ class _HomePageState extends State<HomePage> {
                           ),
                           _RecentActivityCard(
                               activity: recent, colorScheme: colorScheme),
-                        ] else ...[
-                          _EmptyRunCard(colorScheme: colorScheme),
                         ],
                         const SizedBox(height: 96),
                       ],
@@ -217,43 +296,35 @@ class _TodayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.primary,
-            colorScheme.primary.withValues(alpha: 0.75),
+    return CustomPaint(
+      painter: TodayBgCustom(),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Today',
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            Text(formatDistance(distance),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 36,
+                    fontWeight: FontWeight.w900)),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                _TodayStat(label: 'Duration', value: formatDuration(duration)),
+                const SizedBox(width: 24),
+                _TodayStat(label: 'Calories', value: formatCalories(calories)),
+              ],
+            ),
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Today',
-              style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          Text(formatDistance(distance),
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 36,
-                  fontWeight: FontWeight.w900)),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _TodayStat(label: 'Duration', value: formatDuration(duration)),
-              const SizedBox(width: 24),
-              _TodayStat(label: 'Calories', value: formatCalories(calories)),
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -305,7 +376,7 @@ class _StatMiniCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+        // color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -313,12 +384,17 @@ class _StatMiniCard extends StatelessWidget {
         children: [
           Icon(icon, color: iconColor, size: 24),
           const SizedBox(height: 8),
-          Text(value,
-              style:
-                  const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-          Text(label,
-              style: TextStyle(
-                  fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: cs.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
         ],
       ),
     );
@@ -329,9 +405,14 @@ class _StatMiniCard extends StatelessWidget {
 class _WeeklyVolumeChart extends StatelessWidget {
   final List<ActivityEntity> activities;
   final ColorScheme colorScheme;
+  final DateTime selectedDay;
+  final ValueChanged<DateTime> onDayTapped;
 
   const _WeeklyVolumeChart(
-      {required this.activities, required this.colorScheme});
+      {required this.activities,
+      required this.colorScheme,
+      required this.selectedDay,
+      required this.onDayTapped});
 
   @override
   Widget build(BuildContext context) {
@@ -348,7 +429,18 @@ class _WeeklyVolumeChart extends StatelessWidget {
 
     final maxDist =
         days.map((e) => e.distanceM).reduce((a, b) => a > b ? a : b);
-    final labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    // final labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    String getDayLabel(DateTime date) {
+      const labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      return labels[date.weekday % 7];
+    }
+
+    bool isSameDate(DateTime a, DateTime b) {
+      return a.year == b.year && a.month == b.month && a.day == b.day;
+    }
+
+    bool isSelected(DateTime d) => isSameDate(d, selectedDay);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,43 +457,145 @@ class _WeeklyVolumeChart extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: List.generate(7, (i) {
               final d = days[i];
-              final isToday =
-                  d.day.day == today.day && d.day.month == today.month;
+              final isTodayDay = isSameDate(d.day, today);
+              final isSelectedDay = isSelected(d.day);
               final ratio = maxDist > 0 ? d.distanceM / maxDist : 0.0;
-              final dayLabel = labels[d.day.weekday % 7]; // weekday: 1=Mon
+              final dayLabel = getDayLabel(d.day);
               return Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Flexible(
-                      child: AnimatedContainer(
-                        duration: Duration(milliseconds: 300 + i * 40),
-                        width: 24,
-                        height: (ratio * 70).clamp(4, 70),
-                        decoration: BoxDecoration(
-                          color: isToday
-                              ? colorScheme.primary
-                              : colorScheme.primary.withValues(alpha: 0.35),
-                          borderRadius: BorderRadius.circular(6),
+                child: GestureDetector(
+                  onTap: () =>
+                      onDayTapped(DateTime(d.day.year, d.day.month, d.day.day)),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Flexible(
+                        child: AnimatedContainer(
+                          duration: Duration(milliseconds: 300 + i * 40),
+                          width: 24,
+                          height: (ratio * 70).clamp(4, 70),
+                          decoration: BoxDecoration(
+                            color: isSelectedDay
+                                ? colorScheme.primary
+                                : isTodayDay
+                                    ? colorScheme.primary.withValues(alpha: 0.6)
+                                    : colorScheme.primary
+                                        .withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(dayLabel,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight:
-                                isToday ? FontWeight.w700 : FontWeight.normal,
-                            color: isToday
-                                ? colorScheme.primary
-                                : colorScheme.onSurface
-                                    .withValues(alpha: 0.4))),
-                  ],
+                      const SizedBox(height: 6),
+                      Text(dayLabel,
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: isSelectedDay || isTodayDay
+                                  ? FontWeight.w700
+                                  : FontWeight.normal,
+                              color: isSelectedDay
+                                  ? colorScheme.primary
+                                  : isTodayDay
+                                      ? colorScheme.primary
+                                          .withValues(alpha: 0.8)
+                                      : colorScheme.onSurface
+                                          .withValues(alpha: 0.4))),
+                    ],
+                  ),
                 ),
               );
             }),
           ),
         ),
+      ],
+    );
+  }
+}
+
+// ─── Day Activities List ─────────────────────────────────────────────────
+class _DayActivitiesList extends StatelessWidget {
+  final List<ActivityEntity> activities;
+  final DateTime selectedDay;
+  final ColorScheme colorScheme;
+
+  const _DayActivitiesList({
+    required this.activities,
+    required this.selectedDay,
+    required this.colorScheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dayActivities = activities.where((a) {
+      final s = a.startTime;
+      return s.year == selectedDay.year &&
+          s.month == selectedDay.month &&
+          s.day == selectedDay.day;
+    }).toList();
+
+    final now = DateTime.now();
+    final isToday = selectedDay.year == now.year &&
+        selectedDay.month == now.month &&
+        selectedDay.day == now.day;
+
+    const dayNames = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
+    final dayLabel =
+        isToday ? 'Today' : dayNames[(selectedDay.weekday - 1).clamp(0, 6)];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(dayLabel,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+            if (dayActivities.isNotEmpty)
+              TextButton(
+                onPressed: () => context.go(AppRoutes.history),
+                child: const Text('See all'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (dayActivities.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 28),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(16),
+              border:
+                  Border.all(color: colorScheme.outline.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.directions_run_rounded,
+                    size: 40,
+                    color: colorScheme.primary.withValues(alpha: 0.35)),
+                const SizedBox(height: 10),
+                Text('No activities on this day',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface.withValues(alpha: 0.55))),
+              ],
+            ),
+          )
+        else
+          ...dayActivities.map((activity) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _RecentActivityCard(
+                    activity: activity, colorScheme: colorScheme),
+              )),
       ],
     );
   }
@@ -465,42 +659,6 @@ class _RecentActivityCard extends StatelessWidget {
                       color: colorScheme.onSurface.withValues(alpha: 0.5))),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Empty state ──────────────────────────────────────────────────────────────
-class _EmptyRunCard extends StatelessWidget {
-  final ColorScheme colorScheme;
-
-  const _EmptyRunCard({required this.colorScheme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.directions_run_rounded,
-              size: 48, color: colorScheme.primary.withValues(alpha: 0.4)),
-          const SizedBox(height: 12),
-          Text('No runs yet',
-              style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: colorScheme.onSurface.withValues(alpha: 0.6))),
-          const SizedBox(height: 4),
-          Text('Tap Start Run to record your first run',
-              style: TextStyle(
-                  fontSize: 12,
-                  color: colorScheme.onSurface.withValues(alpha: 0.4))),
         ],
       ),
     );

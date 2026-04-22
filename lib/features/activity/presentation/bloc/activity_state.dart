@@ -55,16 +55,9 @@ class ActivityTracking extends ActivityState {
         type: type ?? this.type,
       );
 
+  // Do NOT override props — every new emit must rebuild the UI
   @override
-  List<Object?> get props => [
-        polylinePoints,
-        distanceMeters,
-        elapsed,
-        paceMinPerKm,
-        speedKmH,
-        isPaused,
-        type,
-      ];
+  List<Object?> get props => [elapsed.inSeconds, distanceMeters, isPaused];
 }
 
 class ActivityStopped extends ActivityState {

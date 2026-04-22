@@ -9,6 +9,7 @@ import '../../../activity/presentation/bloc/activity_bloc.dart';
 import '../../../activity/presentation/bloc/activity_event.dart';
 import '../../../activity/presentation/bloc/activity_state.dart';
 import '../../../activity/domain/entities/activity_entity.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AnalyticsPage extends StatefulWidget {
   const AnalyticsPage({super.key});
@@ -31,15 +32,17 @@ class _AnalyticsPageState extends State<AnalyticsPage>
     });
     context
         .read<ActivityBloc>()
-        .add(const ActivitiesLoadRequested(userId: 'demo_user'));
+        .add(ActivitiesLoadRequested(userId: _userId));
   }
+
+  String get _userId => FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
 
   void _load(int index) {
     final bloc = context.read<AnalyticsBloc>();
     if (index == 0) {
-      bloc.add(const WeeklyStatsRequested(userId: 'demo_user'));
+      bloc.add(WeeklyStatsRequested(userId: _userId));
     } else {
-      bloc.add(const MonthlyStatsRequested(userId: 'demo_user'));
+      bloc.add(MonthlyStatsRequested(userId: _userId));
     }
   }
 
@@ -63,7 +66,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
       body: BlocBuilder<ActivityBloc, ActivityState>(
         builder: (context, actState) {
           final activities = actState is ActivitiesLoaded
-              ? actState.activities
+              ? List<ActivityEntity>.from(actState.activities)
               : <ActivityEntity>[];
           return BlocBuilder<AnalyticsBloc, AnalyticsState>(
             builder: (context, statsState) {
@@ -121,14 +124,6 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           const SizedBox(height: 10),
           _PaceZoneBreakdown(activities: activities, cs: cs),
           const SizedBox(height: 20),
-
-          // ── HR Zone pie chart ────────────────────────────────────
-          if (stats.heartRateZoneMinutes.isNotEmpty) ...[
-            _SectionTitle('Heart Rate Zones'),
-            const SizedBox(height: 10),
-            _HrZoneChart(zones: stats.heartRateZoneMinutes, cs: cs),
-            const SizedBox(height: 20),
-          ],
 
           // ── Personal bests ───────────────────────────────────────
           _SectionTitle('Personal Bests'),
@@ -548,83 +543,6 @@ class _PaceZoneBreakdown extends StatelessWidget {
   }
 }
 
-// ─── HR Zone pie ──────────────────────────────────────────────────────────────
-class _HrZoneChart extends StatelessWidget {
-  final Map<String, double> zones;
-  final ColorScheme cs;
-
-  const _HrZoneChart({required this.zones, required this.cs});
-
-  static const _colors = [
-    Color(0xFF4FC3F7),
-    Color(0xFF81C784),
-    Color(0xFFFFD54F),
-    Color(0xFFFF8A65),
-    Color(0xFFEF5350),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final entries = zones.entries.toList();
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          SizedBox(
-            height: 180,
-            child: PieChart(
-              PieChartData(
-                sections: List.generate(entries.length, (i) {
-                  final e = entries[i];
-                  return PieChartSectionData(
-                    value: e.value,
-                    title: '${e.value.toStringAsFixed(0)}m',
-                    color: _colors[i % _colors.length],
-                    radius: 56,
-                    titleStyle: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white),
-                  );
-                }),
-                sectionsSpace: 3,
-                centerSpaceRadius: 44,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 16,
-            runSpacing: 8,
-            children: List.generate(entries.length, (i) {
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: _colors[i % _colors.length],
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(entries[i].key,
-                      style: const TextStyle(fontSize: 12)),
-                ],
-              );
-            }),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ─── Personal bests ───────────────────────────────────────────────────────────
 class _PersonalBests extends StatelessWidget {
   final List<ActivityEntity> activities;
@@ -644,10 +562,11 @@ class _PersonalBests extends StatelessWidget {
 
     final longestRun =
         runs.reduce((a, b) => a.distanceMeters > b.distanceMeters ? a : b);
-    final fastestPace = runs
-        .where((a) => a.averagePaceMinPerKm > 0)
-        .reduce((a, b) =>
-            a.averagePaceMinPerKm < b.averagePaceMinPerKm ? a : b);
+    final validPaceRuns = runs.where((a) => a.averagePaceMinPerKm > 0);
+    final fastestPace = validPaceRuns.isNotEmpty
+        ? validPaceRuns.reduce((a, b) =>
+            a.averagePaceMinPerKm < b.averagePaceMinPerKm ? a : b)
+        : null;
     final longestDuration =
         runs.reduce((a, b) => a.duration > b.duration ? a : b);
 
@@ -666,8 +585,9 @@ class _PersonalBests extends StatelessWidget {
               icon: Icons.speed_rounded,
               color: Colors.orange,
               label: 'Best Pace',
-              value:
-                  '${fastestPace.averagePaceMinPerKm.toStringAsFixed(2)}/km'),
+              value: fastestPace != null
+                  ? '${fastestPace.averagePaceMinPerKm.toStringAsFixed(2)}/km'
+                  : '-/km'),
         ),
         const SizedBox(width: 10),
         Expanded(

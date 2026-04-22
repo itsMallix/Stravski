@@ -47,10 +47,12 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
     on<ActivityResumeTracking>(_onResume);
     on<ActivityStopTracking>(_onStop);
     on<ActivityLocationUpdated>(_onLocationUpdated);
+    on<ActivityTick>(_onTick);
     on<ActivitySaveRequested>(_onSave);
     on<ActivitiesLoadRequested>(_onLoadActivities);
     on<ActivityDetailRequested>(_onDetailRequested);
     on<ActivityExportGpxRequested>(_onExportGpx);
+    on<ActivityResetRequested>(_onReset);
   }
 
   // ─── Start ───────────────────────────────────────────────────────────────
@@ -103,27 +105,12 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
         ));
       });
 
-      // Elapsed timer — ticks every second
+      // Elapsed timer — dispatches ActivityTick every second
       _timer?.cancel();
       _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (!_isPaused) {
+        if (!_isPaused && !isClosed) {
           _elapsed += const Duration(seconds: 1);
-          final stats = computeActivityStats(
-            coords: _polyline.map((p) => [p.latitude, p.longitude]).toList(),
-            elapsed: _elapsed,
-            activityType: _activityType.name,
-          );
-          if (!isClosed) {
-            emit(ActivityTracking(
-              polylinePoints: List.from(_polyline),
-              distanceMeters: stats.distanceM,
-              elapsed: _elapsed,
-              paceMinPerKm: stats.paceMinPerKm,
-              speedKmH: stats.speedKmH,
-              isPaused: false,
-              type: _activityType,
-            ));
-          }
+          add(const ActivityTick());
         }
       });
     } catch (e) {
@@ -146,7 +133,25 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
       accuracy: event.accuracy,
       timestamp: DateTime.now(),
     ));
-    // State is already being emitted every second by the timer
+    // State is already being updated every second by the timer via ActivityTick
+  }
+
+  // ─── Tick (every second) ─────────────────────────────────────────────────
+  void _onTick(ActivityTick event, Emitter<ActivityState> emit) {
+    final stats = computeActivityStats(
+      coords: _polyline.map((p) => [p.latitude, p.longitude]).toList(),
+      elapsed: _elapsed,
+      activityType: _activityType.name,
+    );
+    emit(ActivityTracking(
+      polylinePoints: List.from(_polyline),
+      distanceMeters: stats.distanceM,
+      elapsed: _elapsed,
+      paceMinPerKm: stats.paceMinPerKm,
+      speedKmH: stats.speedKmH,
+      isPaused: false,
+      type: _activityType,
+    ));
   }
 
   // ─── Pause ───────────────────────────────────────────────────────────────
@@ -185,6 +190,17 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
       speedKmH: stats.speedKmH,
       type: _activityType,
     ));
+  }
+
+  // ─── Reset ───────────────────────────────────────────────────────────────
+  void _onReset(ActivityResetRequested event, Emitter<ActivityState> emit) {
+    _timer?.cancel();
+    _locationSub?.cancel();
+    _polyline.clear();
+    _coordinates.clear();
+    _elapsed = Duration.zero;
+    _isPaused = false;
+    emit(const ActivityInitial());
   }
 
   // ─── Save ────────────────────────────────────────────────────────────────

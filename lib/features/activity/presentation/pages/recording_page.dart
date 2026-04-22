@@ -1,15 +1,18 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart' hide ActivityType;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stravski/core/theme/app_theme.dart';
 
 import '../bloc/activity_bloc.dart';
 import '../bloc/activity_event.dart';
 import '../bloc/activity_state.dart';
 import '../../domain/entities/activity_entity.dart';
 import '../widgets/live_stats_card.dart';
+import '../../../../core/theme/map_style.dart';
 
 class RecordingPage extends StatefulWidget {
   const RecordingPage({super.key});
@@ -26,9 +29,16 @@ class _RecordingPageState extends State<RecordingPage>
   late AnimationController _pulseCtrl;
 
   static const _polylineId = PolylineId('route');
-  static const Color _lineColor = Color(0xFFFF5722);
+  static const Color _lineColor = AppTheme.mainred;
   LatLng? _initialPosition;
   bool _isLoadingLocation = true;
+
+  // Cache last known stats so the card never resets to 0 mid-session.
+  Duration _lastElapsed = Duration.zero;
+  double _lastDistance = 0;
+  double _lastPace = 0;
+  double _lastSpeed = 0;
+  bool _lastIsPaused = false;
 
   @override
   void initState() {
@@ -138,22 +148,38 @@ class _RecordingPageState extends State<RecordingPage>
               maxLines: 2,
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  context.read<ActivityBloc>().add(ActivitySaveRequested(
-                        title: titleCtrl.text.trim().isNotEmpty
-                            ? titleCtrl.text.trim()
-                            : 'Activity',
-                        notes: notesCtrl.text.trim().isEmpty
-                            ? null
-                            : notesCtrl.text.trim(),
-                      ));
-                },
-                child: const Text('Save Activity'),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      setState(() => _isStarted = false);
+                      context
+                          .read<ActivityBloc>()
+                          .add(const ActivityResetRequested());
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      context.read<ActivityBloc>().add(ActivitySaveRequested(
+                            title: titleCtrl.text.trim().isNotEmpty
+                                ? titleCtrl.text.trim()
+                                : 'Activity',
+                            notes: notesCtrl.text.trim().isEmpty
+                                ? null
+                                : notesCtrl.text.trim(),
+                          ));
+                    },
+                    child: const Text('Save Activity'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -198,6 +224,22 @@ class _RecordingPageState extends State<RecordingPage>
           children: [
             // ── Full-screen map ─────────────────────────────────────
             BlocBuilder<ActivityBloc, ActivityState>(
+              // Only rebuild the map when polyline actually gains new points,
+              // not on every ActivityTick where only elapsed time changes.
+              buildWhen: (prev, curr) {
+                final prevLen = prev is ActivityTracking
+                    ? prev.polylinePoints.length
+                    : (prev is ActivityStopped
+                        ? prev.polylinePoints.length
+                        : 0);
+                final currLen = curr is ActivityTracking
+                    ? curr.polylinePoints.length
+                    : (curr is ActivityStopped
+                        ? curr.polylinePoints.length
+                        : 0);
+                return prev.runtimeType != curr.runtimeType ||
+                    prevLen != currLen;
+              },
               builder: (context, state) {
                 final polylinePoints = state is ActivityTracking
                     ? state.polylinePoints
@@ -209,6 +251,9 @@ class _RecordingPageState extends State<RecordingPage>
                   return const Center(child: CircularProgressIndicator());
                 }
                 return GoogleMap(
+                  style: Theme.of(context).brightness == Brightness.dark
+                      ? AppMapStyle.darkStyle
+                      : null,
                   onMapCreated: (ctrl) => _mapController = ctrl,
                   initialCameraPosition: CameraPosition(
                     target: _initialPosition!,
@@ -307,25 +352,43 @@ class _RecordingPageState extends State<RecordingPage>
               ),
 
             // ── Live stats ─────────────────────────────────────────
-            BlocBuilder<ActivityBloc, ActivityState>(
-              builder: (context, state) {
-                if (state is ActivityTracking) {
+            // Show immediately when _isStarted, no loading state.
+            if (_isStarted)
+              BlocBuilder<ActivityBloc, ActivityState>(
+                buildWhen: (prev, curr) {
+                  // Never rebuild with a non-tracking state — zeros would flash.
+                  // Only rebuild when actual tracking values change.
+                  if (curr is! ActivityTracking) return false;
+                  if (prev is! ActivityTracking) return true;
+                  return prev.elapsed != curr.elapsed ||
+                      prev.distanceMeters != curr.distanceMeters ||
+                      prev.speedKmH != curr.speedKmH ||
+                      prev.isPaused != curr.isPaused;
+                },
+                builder: (context, state) {
+                  // Update cache whenever we get fresh tracking data.
+                  if (state is ActivityTracking) {
+                    _lastElapsed = state.elapsed;
+                    _lastDistance = state.distanceMeters;
+                    _lastPace = state.paceMinPerKm;
+                    _lastSpeed = state.speedKmH;
+                    _lastIsPaused = state.isPaused;
+                  }
+                  // Always use cached values — never drops to zero.
                   return Positioned(
                     bottom: 130,
                     left: 16,
                     right: 16,
                     child: LiveStatsCard(
-                      distance: state.distanceMeters,
-                      duration: state.elapsed,
-                      pace: state.paceMinPerKm,
-                      speed: state.speedKmH,
-                      isPaused: state.isPaused,
+                      distance: _lastDistance,
+                      duration: _lastElapsed,
+                      pace: _lastPace,
+                      speed: _lastSpeed,
+                      isPaused: _lastIsPaused,
                     ),
                   );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
+                },
+              ),
 
             // ── Control buttons ────────────────────────────────────
             Positioned(
@@ -333,8 +396,17 @@ class _RecordingPageState extends State<RecordingPage>
               left: 0,
               right: 0,
               child: BlocBuilder<ActivityBloc, ActivityState>(
+                // Only rebuild when isPaused toggles; parent setState handles
+                // _isStarted changes so no extra buildWhen needed for that.
+                buildWhen: (prev, curr) {
+                  if (prev is ActivityTracking && curr is ActivityTracking) {
+                    return prev.isPaused != curr.isPaused;
+                  }
+                  return prev.runtimeType != curr.runtimeType;
+                },
                 builder: (context, state) {
-                  if (!_isStarted || state is ActivityInitial) {
+                  // _isStarted drives the layout — no loading spinner ever.
+                  if (!_isStarted) {
                     return Center(
                       child: _RecordButton(
                         onTap: _startActivity,
@@ -345,33 +417,30 @@ class _RecordingPageState extends State<RecordingPage>
                       ),
                     );
                   }
-                  if (state is ActivityTracking) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Pause / Resume
-                        _CircleIconButton(
-                          icon: state.isPaused
-                              ? Icons.play_arrow_rounded
-                              : Icons.pause_rounded,
-                          color: colorScheme.secondary,
-                          onTap: () => _pauseActivity(state.isPaused),
-                        ),
-                        const SizedBox(width: 24),
-                        // Stop
-                        _CircleIconButton(
-                          icon: Icons.stop_rounded,
-                          color: colorScheme.error,
-                          size: 72,
-                          onTap: _stopActivity,
-                        ),
-                      ],
-                    );
-                  }
-                  if (state is ActivityLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  return const SizedBox.shrink();
+                  // Activity has started — show pause/stop immediately.
+                  // If bloc is still initializing (ActivityLoading), buttons
+                  // are shown but pause/stop fire events that queue safely.
+                  final isPaused =
+                      state is ActivityTracking ? state.isPaused : false;
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _CircleIconButton(
+                        icon: isPaused
+                            ? Icons.play_arrow_rounded
+                            : Icons.pause_rounded,
+                        color: colorScheme.secondary,
+                        onTap: () => _pauseActivity(isPaused),
+                      ),
+                      const SizedBox(width: 24),
+                      _CircleIconButton(
+                        icon: Icons.stop_rounded,
+                        color: colorScheme.error,
+                        size: 72,
+                        onTap: _stopActivity,
+                      ),
+                    ],
+                  );
                 },
               ),
             ),

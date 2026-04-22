@@ -4,7 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   AppTheme._();
 
-  static const _seedColor = Color(0xFFFF5722); // Strava-like deep orange
+  static const mainred = Color(0xffD74925);
+  static const lightred = Color(0xFFEAACB7);
+  static const mainOrange = Color(0xFFFF7232);
+  static const lightOrange = Color(0xFFFEBCA0);
 
   static ThemeData get lightTheme => _buildLight();
   static ThemeData get darkTheme => _buildDark();
@@ -12,14 +15,14 @@ class AppTheme {
   // ─── Light Theme ─────────────────────────────────────────────────────────
   static ThemeData _buildLight() {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: _seedColor,
+      seedColor: mainred,
       brightness: Brightness.light,
     );
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       textTheme: GoogleFonts.interTextTheme(),
-      scaffoldBackgroundColor: const Color(0xFFF7F7F7),
+      scaffoldBackgroundColor: Colors.white,
       appBarTheme: AppBarTheme(
         backgroundColor: colorScheme.surface,
         elevation: 0,
@@ -68,7 +71,8 @@ class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.outline.withValues(alpha: 0.4)),
+          borderSide:
+              BorderSide(color: colorScheme.outline.withValues(alpha: 0.4)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -81,7 +85,7 @@ class AppTheme {
   // ─── Dark Theme ──────────────────────────────────────────────────────────
   static ThemeData _buildDark() {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: _seedColor,
+      seedColor: mainred,
       brightness: Brightness.dark,
     );
     return ThemeData(
@@ -137,7 +141,8 @@ class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.outline.withValues(alpha: 0.3)),
+          borderSide:
+              BorderSide(color: colorScheme.outline.withValues(alpha: 0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
