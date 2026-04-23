@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:stravski/core/theme/app_theme.dart';
 
 import '../bloc/analytics_bloc.dart';
 import '../../domain/entities/stats_entity.dart';
@@ -30,9 +31,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
     _tabCtrl.addListener(() {
       if (_tabCtrl.indexIsChanging) _load(_tabCtrl.index);
     });
-    context
-        .read<ActivityBloc>()
-        .add(ActivitiesLoadRequested(userId: _userId));
+    context.read<ActivityBloc>().add(ActivitiesLoadRequested(userId: _userId));
   }
 
   String get _userId => FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
@@ -56,11 +55,20 @@ class _AnalyticsPageState extends State<AnalyticsPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Analytics',
-            style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text(
+          'Analytics',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
         bottom: TabBar(
           controller: _tabCtrl,
-          tabs: const [Tab(text: 'This Week'), Tab(text: 'This Month')],
+          labelColor: AppTheme.mainOrange,
+          indicatorColor: AppTheme.mainOrange,
+          unselectedLabelColor:
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+          tabs: const [
+            Tab(text: 'This Week'),
+            Tab(text: 'This Month'),
+          ],
         ),
       ),
       body: BlocBuilder<ActivityBloc, ActivityState>(
@@ -74,8 +82,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                 return const Center(child: CircularProgressIndicator());
               }
               if (statsState is AnalyticsStatsLoaded) {
-                return _buildBody(
-                    context, statsState.stats, activities);
+                return _buildBody(context, statsState.stats, activities);
               }
               if (statsState is AnalyticsError) {
                 return Center(child: Text(statsState.message));
@@ -139,8 +146,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
 Widget _SectionTitle(String title) => Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: Text(title,
-          style:
-              const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
     );
 
 // ─── Top stats bar ────────────────────────────────────────────────────────────
@@ -162,20 +168,15 @@ class _TopStatsBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _TopStat(
-              label: 'Distance',
-              value: formatDistance(stats.totalDistanceM)),
+              label: 'Distance', value: formatDistance(stats.totalDistanceM)),
           _Divider(),
           _TopStat(
-              label: 'Duration',
-              value: formatDuration(stats.totalDuration)),
+              label: 'Duration', value: formatDuration(stats.totalDuration)),
+          _Divider(),
+          _TopStat(label: 'Activities', value: '${stats.activityCount}'),
           _Divider(),
           _TopStat(
-              label: 'Activities',
-              value: '${stats.activityCount}'),
-          _Divider(),
-          _TopStat(
-              label: 'Calories',
-              value: formatCalories(stats.totalCalories)),
+              label: 'Calories', value: formatCalories(stats.totalCalories)),
         ],
       ),
     );
@@ -193,8 +194,7 @@ class _TopStat extends StatelessWidget {
     return Column(
       children: [
         Text(value,
-            style:
-                const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
         const SizedBox(height: 2),
         Text(label,
             style: TextStyle(
@@ -213,8 +213,7 @@ class _Divider extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: 1,
         height: 36,
-        color:
-            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
       );
 }
 
@@ -236,14 +235,11 @@ class _PaceLineChart extends StatelessWidget {
         .toList();
 
     if (runs.isEmpty) {
-      return _EmptyChart(
-          message: 'Record a run to see pace data', cs: cs);
+      return _EmptyChart(message: 'Record a run to see pace data', cs: cs);
     }
 
     final spots = List.generate(
-        runs.length,
-        (i) =>
-            FlSpot(i.toDouble(), runs[i].averagePaceMinPerKm));
+        runs.length, (i) => FlSpot(i.toDouble(), runs[i].averagePaceMinPerKm));
 
     return Container(
       height: 200,
@@ -269,10 +265,11 @@ class _PaceLineChart extends StatelessWidget {
                 showTitles: true,
                 reservedSize: 36,
                 getTitlesWidget: (v, _) => Text(
-                  '${v.toStringAsFixed(1)}',
+                  v.toStringAsFixed(1),
                   style: TextStyle(
-                      fontSize: 10,
-                      color: cs.onSurface.withValues(alpha: 0.5)),
+                    fontSize: 10,
+                    color: cs.onSurface.withValues(alpha: 0.5),
+                  ),
                 ),
               ),
             ),
@@ -287,36 +284,39 @@ class _PaceLineChart extends StatelessWidget {
                   return Text(
                     '${runs[idx].startTime.month}/${runs[idx].startTime.day}',
                     style: TextStyle(
-                        fontSize: 10,
-                        color: cs.onSurface.withValues(alpha: 0.5)),
+                      fontSize: 10,
+                      color: cs.onSurface.withValues(alpha: 0.5),
+                    ),
                   );
                 },
               ),
             ),
             rightTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
+              sideTitles: SideTitles(showTitles: false),
+            ),
             topTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
           borderData: FlBorderData(show: false),
           lineBarsData: [
             LineChartBarData(
               spots: spots,
               isCurved: true,
-              color: cs.primary,
+              color: AppTheme.mainPurple.withAlpha(95),
               barWidth: 3,
               dotData: FlDotData(
                 show: true,
                 getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
                   radius: 4,
-                  color: cs.primary,
+                  color: AppTheme.mainPurple,
                   strokeColor: cs.surface,
                   strokeWidth: 2,
                 ),
               ),
               belowBarData: BarAreaData(
                 show: true,
-                color: cs.primary.withValues(alpha: 0.12),
+                color: AppTheme.mainPurple.withAlpha(25),
               ),
             ),
           ],
@@ -339,9 +339,7 @@ class _DailyVolumeChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final days = isWeekly ? 7 : 30;
-    final dayLabels = isWeekly
-        ? ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-        : null;
+    final dayLabels = isWeekly ? ['M', 'T', 'W', 'T', 'F', 'S', 'S'] : null;
 
     final data = List.generate(days, (i) {
       final d = now.subtract(Duration(days: days - 1 - i));
@@ -369,8 +367,9 @@ class _DailyVolumeChart extends StatelessWidget {
             show: true,
             drawVerticalLine: false,
             getDrawingHorizontalLine: (v) => FlLine(
-                color: cs.onSurface.withValues(alpha: 0.08),
-                strokeWidth: 1),
+              color: cs.onSurface.withValues(alpha: 0.08),
+              strokeWidth: 1,
+            ),
           ),
           borderData: FlBorderData(show: false),
           titlesData: FlTitlesData(
@@ -379,10 +378,9 @@ class _DailyVolumeChart extends StatelessWidget {
                 showTitles: true,
                 reservedSize: 28,
                 getTitlesWidget: (v, _) => Text(
-                  '${v.toStringAsFixed(0)}',
+                  v.toStringAsFixed(0),
                   style: TextStyle(
-                      fontSize: 9,
-                      color: cs.onSurface.withValues(alpha: 0.5)),
+                      fontSize: 9, color: cs.onSurface.withValues(alpha: 0.5)),
                 ),
               ),
             ),
@@ -404,20 +402,20 @@ class _DailyVolumeChart extends StatelessWidget {
                 },
               ),
             ),
-            rightTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
           barGroups: List.generate(
             days,
             (i) => BarChartGroupData(x: i, barRods: [
               BarChartRodData(
                 toY: data[i].km,
-                color: data[i].day.day == now.day &&
-                        data[i].day.month == now.month
-                    ? cs.primary
-                    : cs.primary.withValues(alpha: 0.4),
+                color:
+                    data[i].day.day == now.day && data[i].day.month == now.month
+                        ? AppTheme.darkYellow
+                        : AppTheme.darkYellow.withValues(alpha: 0.4),
                 width: isWeekly ? 20 : 6,
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -434,8 +432,7 @@ class _PaceZoneBreakdown extends StatelessWidget {
   final List<ActivityEntity> activities;
   final ColorScheme cs;
 
-  const _PaceZoneBreakdown(
-      {required this.activities, required this.cs});
+  const _PaceZoneBreakdown({required this.activities, required this.cs});
 
   static const _zones = [
     (label: 'Recovery', maxPace: 999.0, color: Color(0xFF90CAF9)),
@@ -448,13 +445,12 @@ class _PaceZoneBreakdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final runs = activities.where(
-        (a) => a.type == ActivityType.run && a.averagePaceMinPerKm > 0);
+    final runs = activities
+        .where((a) => a.type == ActivityType.run && a.averagePaceMinPerKm > 0);
 
     if (runs.isEmpty) {
       return _EmptyChart(
-          message: 'Record a run to see pace zone distribution',
-          cs: cs);
+          message: 'Record a run to see pace zone distribution', cs: cs);
     }
 
     // Count runs per zone
@@ -552,20 +548,18 @@ class _PersonalBests extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final runs =
-        activities.where((a) => a.type == ActivityType.run).toList();
+    final runs = activities.where((a) => a.type == ActivityType.run).toList();
 
     if (runs.isEmpty) {
-      return _EmptyChart(
-          message: 'Record runs to see personal bests', cs: cs);
+      return _EmptyChart(message: 'Record runs to see personal bests', cs: cs);
     }
 
     final longestRun =
         runs.reduce((a, b) => a.distanceMeters > b.distanceMeters ? a : b);
     final validPaceRuns = runs.where((a) => a.averagePaceMinPerKm > 0);
     final fastestPace = validPaceRuns.isNotEmpty
-        ? validPaceRuns.reduce((a, b) =>
-            a.averagePaceMinPerKm < b.averagePaceMinPerKm ? a : b)
+        ? validPaceRuns.reduce(
+            (a, b) => a.averagePaceMinPerKm < b.averagePaceMinPerKm ? a : b)
         : null;
     final longestDuration =
         runs.reduce((a, b) => a.duration > b.duration ? a : b);
@@ -633,8 +627,7 @@ class _PBCard extends StatelessWidget {
           Text(label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                  fontSize: 10,
-                  color: cs.onSurface.withValues(alpha: 0.5))),
+                  fontSize: 10, color: cs.onSurface.withValues(alpha: 0.5))),
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stravski/core/theme/app_theme.dart';
 
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -53,7 +54,7 @@ class _SplashPageState extends State<SplashPage>
         }
       },
       child: Scaffold(
-        backgroundColor: colorScheme.primary,
+        backgroundColor: Colors.black,
         body: Center(
           child: FadeTransition(
             opacity: _fadeIn,
@@ -93,9 +94,10 @@ class _SplashPageState extends State<SplashPage>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Track. Share. Improve.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withOpacity(0.8),
+                    'Nah, I did Win',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
                           letterSpacing: 0.5,
                         ),
                   ),

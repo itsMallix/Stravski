@@ -39,8 +39,7 @@ class LiveStatsCard extends StatelessWidget {
           if (isPaused)
             Container(
               margin: const EdgeInsets.only(bottom: 10),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
                 color: colorScheme.errorContainer,
                 borderRadius: BorderRadius.circular(20),
@@ -63,8 +62,7 @@ class LiveStatsCard extends StatelessWidget {
                   value: formatDistance(distance),
                   isLarge: true),
               _Divider(),
-              _StatItem(
-                  label: 'Duration', value: formatDuration(duration)),
+              _StatItem(label: 'Duration', value: formatDuration(duration)),
               _Divider(),
               _StatItem(label: 'Pace', value: formatPace(pace)),
               _Divider(),
@@ -98,19 +96,14 @@ class _StatItem extends StatelessWidget {
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 fontSize: isLarge ? 22 : 15,
-                color: isLarge
-                    ? Theme.of(context).colorScheme.primary
-                    : null,
+                color: isLarge ? Theme.of(context).colorScheme.primary : null,
               ),
         ),
         const SizedBox(height: 2),
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withOpacity(0.5),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
               ),
         ),
       ],
@@ -123,7 +116,6 @@ class _Divider extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         height: 32,
         width: 1,
-        color:
-            Theme.of(context).colorScheme.outlineVariant,
+        color: Theme.of(context).colorScheme.outlineVariant,
       );
 }

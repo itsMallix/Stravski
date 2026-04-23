@@ -67,16 +67,16 @@ class _ActivityHistoryPageState extends State<ActivityHistoryPage> {
               itemCount: state.activities.length,
               itemBuilder: (context, i) => ActivityCard(
                 activity: state.activities[i],
-                onTap: () => context.push(
-                  '/activity/${state.activities[i].id}',
-                ),
+                onTap: () async {
+                  await context.push(
+                    '/activity/${state.activities[i].id}',
+                  );
+                  if (mounted) _load();
+                },
               ),
             );
           }
-          // If state changed to something else (e.g. detail loaded), reload
-          if (state is! ActivityLoading) {
-            WidgetsBinding.instance.addPostFrameCallback((_) => _load());
-          }
+          // Fallback state
           return const _EmptyState();
         },
       ),

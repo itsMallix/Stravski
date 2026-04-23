@@ -29,7 +29,7 @@ class _RecordingPageState extends State<RecordingPage>
   late AnimationController _pulseCtrl;
 
   static const _polylineId = PolylineId('route');
-  static const Color _lineColor = AppTheme.mainred;
+  static const Color _lineColor = AppTheme.mainOrange;
   LatLng? _initialPosition;
   bool _isLoadingLocation = true;
 
@@ -258,7 +258,7 @@ class _RecordingPageState extends State<RecordingPage>
                   initialCameraPosition: CameraPosition(
                     target: _initialPosition!,
                     zoom: 17,
-                    tilt: 25,
+                    // tilt: 25,
                   ),
                   myLocationEnabled: true,
                   myLocationButtonEnabled: false,
@@ -319,7 +319,7 @@ class _RecordingPageState extends State<RecordingPage>
                               horizontal: 20, vertical: 10),
                           decoration: BoxDecoration(
                             color: selected
-                                ? colorScheme.primary
+                                ? AppTheme.mainOrange
                                 : colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(24),
                           ),
@@ -411,7 +411,7 @@ class _RecordingPageState extends State<RecordingPage>
                       child: _RecordButton(
                         onTap: _startActivity,
                         pulseCtrl: _pulseCtrl,
-                        color: colorScheme.primary,
+                        color: AppTheme.mainred,
                         icon: Icons.play_arrow_rounded,
                         label: 'START',
                       ),
@@ -429,13 +429,13 @@ class _RecordingPageState extends State<RecordingPage>
                         icon: isPaused
                             ? Icons.play_arrow_rounded
                             : Icons.pause_rounded,
-                        color: colorScheme.secondary,
+                        color: AppTheme.mainOrange,
                         onTap: () => _pauseActivity(isPaused),
                       ),
                       const SizedBox(width: 24),
                       _CircleIconButton(
                         icon: Icons.stop_rounded,
-                        color: colorScheme.error,
+                        color: AppTheme.mainred,
                         size: 72,
                         onTap: _stopActivity,
                       ),
@@ -485,10 +485,11 @@ class _RecordButton extends StatelessWidget {
         animation: pulseCtrl,
         builder: (_, child) {
           return Container(
-            width: 80 + 8 * pulseCtrl.value,
-            height: 80 + 8 * pulseCtrl.value,
+            width: 120 + 8 * pulseCtrl.value,
+            height: 70 + 8 * pulseCtrl.value,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.circular(20),
               color: color.withValues(alpha: 0.15 + 0.1 * pulseCtrl.value),
             ),
             child: child,
@@ -496,7 +497,11 @@ class _RecordButton extends StatelessWidget {
         },
         child: Container(
           margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+          decoration: BoxDecoration(
+            shape: BoxShape.rectangle,
+            color: color,
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

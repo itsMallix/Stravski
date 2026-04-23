@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stravski/app/shell/custom_widgets.dart';
 import 'package:stravski/core/theme/app_theme.dart';
@@ -44,25 +45,89 @@ class HomeShell extends StatelessWidget {
               break;
           }
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
+            icon: SvgPicture.asset(
+              'assets/icons/home_outlined.svg',
+              height: 24,
+              width: 24,
+              colorFilter: ColorFilter.mode(
+                colorScheme.onPrimaryContainer,
+                BlendMode.srcIn,
+              ),
+            ),
+            selectedIcon: SvgPicture.asset(
+              'assets/icons/home_filled.svg',
+              height: 24,
+              width: 24,
+              colorFilter: ColorFilter.mode(
+                colorScheme.onPrimaryContainer,
+                BlendMode.srcIn,
+              ),
+            ),
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.history_outlined),
-            selectedIcon: Icon(Icons.history_rounded),
+            icon: SvgPicture.asset(
+              'assets/icons/history_outlined.svg',
+              height: 24,
+              width: 24,
+              colorFilter: ColorFilter.mode(
+                colorScheme.onPrimaryContainer,
+                BlendMode.srcIn,
+              ),
+            ),
+            selectedIcon: SvgPicture.asset(
+              'assets/icons/history_filled.svg',
+              height: 24,
+              width: 24,
+              colorFilter: ColorFilter.mode(
+                colorScheme.onPrimaryContainer,
+                BlendMode.srcIn,
+              ),
+            ),
             label: 'History',
           ),
           NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart_rounded),
+            icon: SvgPicture.asset(
+              'assets/icons/analytics_outlined.svg',
+              height: 24,
+              width: 24,
+              colorFilter: ColorFilter.mode(
+                colorScheme.onPrimaryContainer,
+                BlendMode.srcIn,
+              ),
+            ),
+            selectedIcon: SvgPicture.asset(
+              'assets/icons/analytics_filled.svg',
+              height: 24,
+              width: 24,
+              colorFilter: ColorFilter.mode(
+                colorScheme.onPrimaryContainer,
+                BlendMode.srcIn,
+              ),
+            ),
             label: 'Analytics',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person_rounded),
+            icon: SvgPicture.asset(
+              'assets/icons/profile_outlined.svg',
+              height: 24,
+              width: 24,
+              colorFilter: ColorFilter.mode(
+                colorScheme.onPrimaryContainer,
+                BlendMode.srcIn,
+              ),
+            ),
+            selectedIcon: SvgPicture.asset(
+              'assets/icons/profile_filled.svg',
+              height: 24,
+              width: 24,
+              colorFilter: ColorFilter.mode(
+                colorScheme.onPrimaryContainer,
+                BlendMode.srcIn,
+              ),
+            ),
             label: 'Profile',
           ),
         ],

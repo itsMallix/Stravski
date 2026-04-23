@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> {
             : 'Good Evening';
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: Color(0xFF121212),
       body: SafeArea(
         child: BlocBuilder<ActivityBloc, ActivityState>(
           builder: (context, state) {
@@ -145,17 +145,36 @@ class _HomePageState extends State<HomePage> {
                       ),
                       Text(
                         'Stravski Runner',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w800),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
                     ],
                   ),
                   actions: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.notifications_none_rounded),
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      height: MediaQuery.of(context).size.height * 1,
+                      width: 50,
+                      decoration: BoxDecoration(
+                        color: AppTheme.lightOrange,
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(25),
+                          bottomRight: Radius.circular(10),
+                          topLeft: Radius.circular(10),
+                          topRight: Radius.circular(5),
+                        ),
+                      ),
+                      child: IconButton(
+                        onPressed: () {},
+                        icon: Icon(
+                          Icons.notifications_rounded,
+                          color: colorScheme.onPrimary,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 8),
                   ],
@@ -178,25 +197,12 @@ class _HomePageState extends State<HomePage> {
                         // ── Streak + Weekly volume ─────────────────────
                         Stack(
                           children: [
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () {},
-                                child: CircleAvatar(
-                                  radius: 16,
-                                  backgroundColor: AppTheme.mainred,
-                                  child: const Icon(Icons.whatshot_rounded,
-                                      size: 16, color: Colors.white),
-                                ),
-                              ),
-                            ),
                             Positioned.fill(
                               child: SvgPicture.asset(
                                 'assets/widgets/statisticbg.svg',
                                 fit: BoxFit.fill,
                                 colorFilter: ColorFilter.mode(
-                                    AppTheme.lightOrange.withValues(alpha: 0.5),
+                                    AppTheme.lightOrange.withValues(alpha: 0.2),
                                     BlendMode.srcIn),
                               ),
                             ),
@@ -224,6 +230,27 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                               ],
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          "Run In Peace Bradar, Enjoy..🤙"),
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                },
+                                child: CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: AppTheme.mainred,
+                                  child: const Icon(Icons.whatshot_rounded,
+                                      size: 16, color: Colors.white),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -296,36 +323,49 @@ class _TodayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: TodayBgCustom(),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Today',
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600)),
-            const SizedBox(height: 4),
-            Text(formatDistance(distance),
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 36,
-                    fontWeight: FontWeight.w900)),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                _TodayStat(label: 'Duration', value: formatDuration(duration)),
-                const SizedBox(width: 24),
-                _TodayStat(label: 'Calories', value: formatCalories(calories)),
-              ],
-            ),
-          ],
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: SvgPicture.asset(
+            'assets/widgets/todaybg.svg',
+            fit: BoxFit.fill,
+          ),
         ),
-      ),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Today',
+                  style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              Text(formatDistance(distance),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900)),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  _TodayStat(
+                    label: 'Duration',
+                    value: formatDuration(duration),
+                  ),
+                  const SizedBox(width: 24),
+                  _TodayStat(
+                    label: 'Calories',
+                    value: formatCalories(calories),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -445,11 +485,13 @@ class _WeeklyVolumeChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Weekly Volume',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700)),
+        Text(
+          'Weekly Volume',
+          style: Theme.of(context)
+              .textTheme
+              .titleMedium
+              ?.copyWith(fontWeight: FontWeight.w700),
+        ),
         const SizedBox(height: 12),
         SizedBox(
           height: 100,
@@ -463,8 +505,13 @@ class _WeeklyVolumeChart extends StatelessWidget {
               final dayLabel = getDayLabel(d.day);
               return Expanded(
                 child: GestureDetector(
-                  onTap: () =>
-                      onDayTapped(DateTime(d.day.year, d.day.month, d.day.day)),
+                  onTap: () => onDayTapped(
+                    DateTime(
+                      d.day.year,
+                      d.day.month,
+                      d.day.day,
+                    ),
+                  ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -475,29 +522,31 @@ class _WeeklyVolumeChart extends StatelessWidget {
                           height: (ratio * 70).clamp(4, 70),
                           decoration: BoxDecoration(
                             color: isSelectedDay
-                                ? colorScheme.primary
+                                ? AppTheme.darkYellow
                                 : isTodayDay
                                     ? colorScheme.primary.withValues(alpha: 0.6)
-                                    : colorScheme.primary
-                                        .withValues(alpha: 0.25),
+                                    : AppTheme.lightOrange
+                                        .withValues(alpha: 0.6),
                             borderRadius: BorderRadius.circular(6),
                           ),
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Text(dayLabel,
-                          style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: isSelectedDay || isTodayDay
-                                  ? FontWeight.w700
-                                  : FontWeight.normal,
-                              color: isSelectedDay
-                                  ? colorScheme.primary
-                                  : isTodayDay
-                                      ? colorScheme.primary
-                                          .withValues(alpha: 0.8)
-                                      : colorScheme.onSurface
-                                          .withValues(alpha: 0.4))),
+                      Text(
+                        dayLabel,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: isSelectedDay || isTodayDay
+                              ? FontWeight.w700
+                              : FontWeight.normal,
+                          color: isSelectedDay
+                              ? AppTheme.darkYellow
+                              : isTodayDay
+                                  ? colorScheme.primary.withValues(alpha: 0.8)
+                                  : colorScheme.onSurface
+                                      .withValues(alpha: 0.4),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -554,11 +603,13 @@ class _DayActivitiesList extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(dayLabel,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              dayLabel,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
             if (dayActivities.isNotEmpty)
               TextButton(
                 onPressed: () => context.go(AppRoutes.history),
@@ -579,23 +630,33 @@ class _DayActivitiesList extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Icon(Icons.directions_run_rounded,
-                    size: 40,
-                    color: colorScheme.primary.withValues(alpha: 0.35)),
+                SvgPicture.asset(
+                  'assets/icons/sleeping.svg',
+                  height: 40,
+                  colorFilter: ColorFilter.mode(
+                    colorScheme.primary.withValues(alpha: 0.35),
+                    BlendMode.srcIn,
+                  ),
+                ),
                 const SizedBox(height: 10),
-                Text('No activities on this day',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface.withValues(alpha: 0.55))),
+                Text(
+                  'No activities on this day',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface.withValues(alpha: 0.55),
+                  ),
+                ),
               ],
             ),
           )
         else
-          ...dayActivities.map((activity) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _RecentActivityCard(
-                    activity: activity, colorScheme: colorScheme),
-              )),
+          ...dayActivities.map(
+            (activity) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _RecentActivityCard(
+                  activity: activity, colorScheme: colorScheme),
+            ),
+          ),
       ],
     );
   }
@@ -628,7 +689,7 @@ class _RecentActivityCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: colorScheme.primaryContainer,
+              color: AppTheme.mainOrange.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(typeIcon, color: colorScheme.primary, size: 24),

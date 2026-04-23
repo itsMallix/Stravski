@@ -8,6 +8,8 @@ class AppTheme {
   static const lightred = Color(0xFFEAACB7);
   static const mainOrange = Color(0xFFFF7232);
   static const lightOrange = Color(0xFFFEBCA0);
+  static const darkYellow = Color(0xFFFF9900);
+  static const mainPurple = Color(0xFFB99FFF);
 
   static ThemeData get lightTheme => _buildLight();
   static ThemeData get darkTheme => _buildDark();
