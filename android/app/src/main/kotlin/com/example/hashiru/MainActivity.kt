@@ -1,4 +1,4 @@
-package com.example.stravski
+package com.example.hashiru
 
 import io.flutter.embedding.android.FlutterActivity
 

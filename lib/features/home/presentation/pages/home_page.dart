@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:stravski/core/theme/app_theme.dart';
-import 'package:stravski/features/home/widgets/custom_bg.dart';
+import 'package:hashiru/core/theme/app_theme.dart';
+import 'package:hashiru/features/home/widgets/custom_bg.dart';
 
 import '../../../activity/presentation/bloc/activity_bloc.dart';
 import '../../../activity/presentation/bloc/activity_event.dart';
@@ -144,7 +144,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       Text(
-                        'Stravski Runner',
+                        'Hashiru Runner',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w800,
                             ),

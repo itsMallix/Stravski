@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hashiru/core/theme/app_theme.dart';
 
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -67,15 +68,17 @@ class _LoginPageState extends State<LoginPage> {
 
                   // ── Logo ─────────────────────────────────────────────
                   Center(
-                    child: Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        borderRadius: BorderRadius.circular(20),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Image.asset('assets/app/app_icon.png'),
                       ),
-                      child: const Icon(Icons.directions_run_rounded,
-                          color: Colors.white, size: 40),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -92,25 +95,27 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 4),
                   Center(
                     child: Text(
-                      'Sign in to continue tracking',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: colorScheme.onSurface.withOpacity(0.6)),
+                      'Sign in to enjoy the run',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface.withOpacity(0.6)),
                     ),
                   ),
                   const SizedBox(height: 40),
 
                   // ── Email ─────────────────────────────────────────────
-                  Text('Email', style: Theme.of(context).textTheme.labelLarge),
+                  Text('Email', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   TextFormField(
+                    cursorColor: AppTheme.mainOrange,
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'you@example.com',
-                      prefixIcon: Icon(Icons.email_outlined),
+                      prefixIcon: Icon(
+                        Icons.email_outlined,
+                        color: AppTheme.mainOrange.withValues(alpha: 0.7),
+                      ),
                     ),
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'Enter your email';
@@ -121,21 +126,29 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 16),
 
                   // ── Password ──────────────────────────────────────────
-                  Text('Password',
-                      style: Theme.of(context).textTheme.labelLarge),
+                  Text(
+                    'Password',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   TextFormField(
+                    cursorColor: AppTheme.mainOrange,
                     controller: _passwordCtrl,
                     obscureText: _obscure,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
                     decoration: InputDecoration(
                       hintText: '••••••••',
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: Icon(
+                        Icons.lock_outline,
+                        color: AppTheme.mainOrange.withValues(alpha: 0.7),
+                      ),
                       suffixIcon: IconButton(
                         icon: Icon(
                             _obscure ? Icons.visibility_off : Icons.visibility),
-                        onPressed: () => setState(() => _obscure = !_obscure),
+                        onPressed: () => setState(
+                          () => _obscure = !_obscure,
+                        ),
                       ),
                     ),
                     validator: (v) {
@@ -152,6 +165,10 @@ class _LoginPageState extends State<LoginPage> {
                       return SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.mainred,
+                            foregroundColor: Colors.white,
+                          ),
                           onPressed: loading ? null : _submit,
                           child: loading
                               ? const SizedBox(
@@ -182,7 +199,7 @@ class _LoginPageState extends State<LoginPage> {
                           child: Text(
                             'Sign Up',
                             style: TextStyle(
-                              color: colorScheme.primary,
+                              color: AppTheme.darkYellow,
                               fontWeight: FontWeight.w700,
                             ),
                           ),

@@ -7,15 +7,12 @@ class LiveStatsCard extends StatelessWidget {
   final Duration duration;
   final double pace;
   final double speed;
-  final bool isPaused;
-
   const LiveStatsCard({
     super.key,
     required this.distance,
     required this.duration,
     required this.pace,
     required this.speed,
-    required this.isPaused,
   });
 
   @override
@@ -28,7 +25,7 @@ class LiveStatsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -36,24 +33,6 @@ class LiveStatsCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          if (isPaused)
-            Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: colorScheme.errorContainer,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'PAUSED',
-                style: TextStyle(
-                  color: colorScheme.error,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [

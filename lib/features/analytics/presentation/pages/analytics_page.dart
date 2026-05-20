@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:stravski/core/theme/app_theme.dart';
+import 'package:hashiru/core/theme/app_theme.dart';
 
 import '../bloc/analytics_bloc.dart';
 import '../../domain/entities/stats_entity.dart';

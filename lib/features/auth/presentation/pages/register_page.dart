@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hashiru/core/theme/app_theme.dart';
 
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -73,7 +74,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Join Stravski',
+                    'Join Hashiru',
                     style: Theme.of(context)
                         .textTheme
                         .headlineMedium
@@ -86,7 +87,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         color: colorScheme.onSurface.withOpacity(0.6)),
                   ),
                   const SizedBox(height: 32),
-
                   _label('Display Name'),
                   const SizedBox(height: 8),
                   TextFormField(
@@ -100,7 +100,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         (v == null || v.isEmpty) ? 'Enter your name' : null,
                   ),
                   const SizedBox(height: 16),
-
                   _label('Email'),
                   const SizedBox(height: 8),
                   TextFormField(
@@ -118,7 +117,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-
                   _label('Password'),
                   const SizedBox(height: 8),
                   TextFormField(
@@ -129,11 +127,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       hintText: '••••••••',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscure
-                            ? Icons.visibility_off
-                            : Icons.visibility),
-                        onPressed: () =>
-                            setState(() => _obscure = !_obscure),
+                        icon: Icon(
+                            _obscure ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setState(() => _obscure = !_obscure),
                       ),
                     ),
                     validator: (v) {
@@ -144,7 +140,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-
                   _label('Confirm Password'),
                   const SizedBox(height: 8),
                   TextFormField(
@@ -164,13 +159,15 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                   ),
                   const SizedBox(height: 32),
-
                   BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
                       final loading = state is AuthLoading;
                       return SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.mainred,
+                              foregroundColor: Colors.white),
                           onPressed: loading ? null : _submit,
                           child: loading
                               ? const SizedBox(

@@ -24,18 +24,21 @@ void main() async {
   await initializeDateFormatting('en_US', null);
   await di.initDependencies();
 
-  runApp(const StravskiApp());
+  runApp(const HashiruApp());
 }
 
-class StravskiApp extends StatelessWidget {
-  const StravskiApp({super.key});
+class HashiruApp extends StatelessWidget {
+  const HashiruApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>(
-          create: (_) => di.sl<AuthBloc>()..add(const AuthStarted()),
+          create: (_) => di.sl<AuthBloc>()
+            ..add(
+              const AuthStarted(),
+            ),
         ),
         BlocProvider<ActivityBloc>(
           create: (_) => di.sl<ActivityBloc>(),
@@ -51,7 +54,7 @@ class StravskiApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp.router(
-        title: 'Stravski',
+        title: 'Hashiru',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,

@@ -23,7 +23,6 @@ class ActivityTracking extends ActivityState {
   final Duration elapsed;
   final double paceMinPerKm;
   final double speedKmH;
-  final bool isPaused;
   final ActivityType type;
 
   const ActivityTracking({
@@ -32,7 +31,6 @@ class ActivityTracking extends ActivityState {
     required this.elapsed,
     required this.paceMinPerKm,
     required this.speedKmH,
-    required this.isPaused,
     required this.type,
   });
 
@@ -42,7 +40,6 @@ class ActivityTracking extends ActivityState {
     Duration? elapsed,
     double? paceMinPerKm,
     double? speedKmH,
-    bool? isPaused,
     ActivityType? type,
   }) =>
       ActivityTracking(
@@ -51,13 +48,17 @@ class ActivityTracking extends ActivityState {
         elapsed: elapsed ?? this.elapsed,
         paceMinPerKm: paceMinPerKm ?? this.paceMinPerKm,
         speedKmH: speedKmH ?? this.speedKmH,
-        isPaused: isPaused ?? this.isPaused,
         type: type ?? this.type,
       );
 
-  // Do NOT override props — every new emit must rebuild the UI
   @override
-  List<Object?> get props => [elapsed.inSeconds, distanceMeters, isPaused];
+  List<Object?> get props => [
+        elapsed.inSeconds,
+        distanceMeters,
+        polylinePoints.length,
+        paceMinPerKm,
+        speedKmH,
+      ];
 }
 
 class ActivityStopped extends ActivityState {

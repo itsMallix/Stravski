@@ -63,6 +63,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '896030216255',
     projectId: 'flutter-test-b74ff',
     storageBucket: 'flutter-test-b74ff.firebasestorage.app',
-    iosBundleId: 'com.example.stravski',
+    iosBundleId: 'com.example.hashiru',
   );
 }

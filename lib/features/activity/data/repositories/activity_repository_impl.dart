@@ -67,7 +67,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
     builder.processing('xml', 'version="1.0" encoding="UTF-8"');
     builder.element('gpx', nest: () {
       builder.attribute('version', '1.1');
-      builder.attribute('creator', 'Stravski');
+      builder.attribute('creator', 'Hashiru');
       builder.attribute('xmlns',
           'http://www.topografix.com/GPX/1/1');
       builder.element('trk', nest: () {

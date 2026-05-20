@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:stravski/app/shell/custom_widgets.dart';
-import 'package:stravski/core/theme/app_theme.dart';
+import 'package:hashiru/app/shell/custom_widgets.dart';
+import 'package:hashiru/core/theme/app_theme.dart';
 
 import '../../core/constants/app_routes.dart';
 
@@ -19,10 +19,12 @@ class HomeShell extends StatelessWidget {
     int currentIndex = 0;
     if (location.startsWith(AppRoutes.history)) {
       currentIndex = 1;
-    } else if (location.startsWith(AppRoutes.analytics)) {
+    } else if (location.startsWith(AppRoutes.calendar)) {
       currentIndex = 2;
-    } else if (location.startsWith(AppRoutes.profile)) {
+    } else if (location.startsWith(AppRoutes.analytics)) {
       currentIndex = 3;
+    } else if (location.startsWith(AppRoutes.profile)) {
+      currentIndex = 4;
     }
 
     return Scaffold(
@@ -38,9 +40,12 @@ class HomeShell extends StatelessWidget {
               context.go(AppRoutes.history);
               break;
             case 2:
-              context.go(AppRoutes.analytics);
+              context.go(AppRoutes.calendar);
               break;
             case 3:
+              context.go(AppRoutes.analytics);
+              break;
+            case 4:
               context.go(AppRoutes.profile);
               break;
           }
@@ -87,6 +92,27 @@ class HomeShell extends StatelessWidget {
               ),
             ),
             label: 'History',
+          ),
+          NavigationDestination(
+            icon: SvgPicture.asset(
+              'assets/icons/calendar_outlined.svg',
+              height: 24,
+              width: 24,
+              colorFilter: ColorFilter.mode(
+                colorScheme.onPrimaryContainer,
+                BlendMode.srcIn,
+              ),
+            ),
+            selectedIcon: SvgPicture.asset(
+              'assets/icons/calendar_filled.svg',
+              height: 24,
+              width: 24,
+              colorFilter: ColorFilter.mode(
+                colorScheme.onPrimaryContainer,
+                BlendMode.srcIn,
+              ),
+            ),
+            label: 'Calendar',
           ),
           NavigationDestination(
             icon: SvgPicture.asset(

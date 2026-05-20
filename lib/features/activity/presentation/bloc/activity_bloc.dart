@@ -33,7 +33,6 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
   DateTime? _startTime;
   String _userId = '';
   ActivityType _activityType = ActivityType.run;
-  bool _isPaused = false;
 
   ActivityBloc({
     required this.locationService,
@@ -43,8 +42,6 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
     required this.exportGpxUseCase,
   }) : super(const ActivityInitial()) {
     on<ActivityStartTracking>(_onStart);
-    on<ActivityPauseTracking>(_onPause);
-    on<ActivityResumeTracking>(_onResume);
     on<ActivityStopTracking>(_onStop);
     on<ActivityLocationUpdated>(_onLocationUpdated);
     on<ActivityTick>(_onTick);
@@ -53,6 +50,13 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
     on<ActivityDetailRequested>(_onDetailRequested);
     on<ActivityExportGpxRequested>(_onExportGpx);
     on<ActivityResetRequested>(_onReset);
+  }
+
+  void _cancelLocationStream() {
+    try {
+      _locationSub?.cancel().catchError((_) {});
+    } catch (_) {}
+    _locationSub = null;
   }
 
   // ─── Start ───────────────────────────────────────────────────────────────
@@ -69,7 +73,6 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
       _startTime = DateTime.now();
       _userId = event.userId;
       _activityType = event.type;
-      _isPaused = false;
 
       // Get initial position
       final initialPos = await locationService.getCurrentPosition();
@@ -90,12 +93,11 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
         elapsed: Duration.zero,
         paceMinPerKm: 0,
         speedKmH: 0,
-        isPaused: false,
         type: _activityType,
       ));
 
       // Start location stream
-      _locationSub?.cancel();
+      _cancelLocationStream();
       _locationSub = locationService.getPositionStream().listen((pos) {
         add(ActivityLocationUpdated(
           latitude: pos.latitude,
@@ -108,7 +110,7 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
       // Elapsed timer — dispatches ActivityTick every second
       _timer?.cancel();
       _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (!_isPaused && !isClosed) {
+        if (!isClosed) {
           _elapsed += const Duration(seconds: 1);
           add(const ActivityTick());
         }
@@ -123,7 +125,6 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
     ActivityLocationUpdated event,
     Emitter<ActivityState> emit,
   ) {
-    if (_isPaused) return;
     final latLng = LatLng(event.latitude, event.longitude);
     _polyline.add(latLng);
     _coordinates.add(CoordinatePoint(
@@ -133,7 +134,22 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
       accuracy: event.accuracy,
       timestamp: DateTime.now(),
     ));
-    // State is already being updated every second by the timer via ActivityTick
+
+    // Emit immediately on every GPS fix so the map polyline and stats card
+    // update in real-time, not only when the 1-second timer fires.
+    final stats = computeActivityStats(
+      coords: _polyline.map((p) => [p.latitude, p.longitude]).toList(),
+      elapsed: _elapsed,
+      activityType: _activityType.name,
+    );
+    emit(ActivityTracking(
+      polylinePoints: List.from(_polyline),
+      distanceMeters: stats.distanceM,
+      elapsed: _elapsed,
+      paceMinPerKm: stats.paceMinPerKm,
+      speedKmH: stats.speedKmH,
+      type: _activityType,
+    ));
   }
 
   // ─── Tick (every second) ─────────────────────────────────────────────────
@@ -149,32 +165,14 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
       elapsed: _elapsed,
       paceMinPerKm: stats.paceMinPerKm,
       speedKmH: stats.speedKmH,
-      isPaused: false,
       type: _activityType,
     ));
-  }
-
-  // ─── Pause ───────────────────────────────────────────────────────────────
-  void _onPause(ActivityPauseTracking event, Emitter<ActivityState> emit) {
-    _isPaused = true;
-    if (state is ActivityTracking) {
-      emit((state as ActivityTracking).copyWith(isPaused: true));
-    }
-  }
-
-  // ─── Resume ──────────────────────────────────────────────────────────────
-  void _onResume(ActivityResumeTracking event, Emitter<ActivityState> emit) {
-    _isPaused = false;
-    if (state is ActivityTracking) {
-      emit((state as ActivityTracking).copyWith(isPaused: false));
-    }
   }
 
   // ─── Stop ────────────────────────────────────────────────────────────────
   void _onStop(ActivityStopTracking event, Emitter<ActivityState> emit) {
     _timer?.cancel();
-    _locationSub?.cancel();
-    _isPaused = false;
+    _cancelLocationStream();
 
     final stats = computeActivityStats(
       coords: _polyline.map((p) => [p.latitude, p.longitude]).toList(),
@@ -195,11 +193,10 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
   // ─── Reset ───────────────────────────────────────────────────────────────
   void _onReset(ActivityResetRequested event, Emitter<ActivityState> emit) {
     _timer?.cancel();
-    _locationSub?.cancel();
+    _cancelLocationStream();
     _polyline.clear();
     _coordinates.clear();
     _elapsed = Duration.zero;
-    _isPaused = false;
     emit(const ActivityInitial());
   }
 
@@ -281,7 +278,7 @@ class ActivityBloc extends Bloc<ActivityEvent, ActivityState> {
   @override
   Future<void> close() {
     _timer?.cancel();
-    _locationSub?.cancel();
+    _cancelLocationStream();
     return super.close();
   }
 }

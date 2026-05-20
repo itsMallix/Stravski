@@ -17,14 +17,6 @@ class ActivityStartTracking extends ActivityEvent {
   List<Object?> get props => [userId, type];
 }
 
-class ActivityPauseTracking extends ActivityEvent {
-  const ActivityPauseTracking();
-}
-
-class ActivityResumeTracking extends ActivityEvent {
-  const ActivityResumeTracking();
-}
-
 class ActivityStopTracking extends ActivityEvent {
   const ActivityStopTracking();
 }

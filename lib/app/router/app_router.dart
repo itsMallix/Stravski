@@ -6,6 +6,7 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/activity/presentation/pages/recording_page.dart';
 import '../../features/activity/presentation/pages/activity_detail_page.dart';
 import '../../features/activity/presentation/pages/activity_history_page.dart';
+import '../../features/activity/presentation/pages/calendar_page.dart';
 import '../../features/analytics/presentation/pages/analytics_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../core/constants/app_routes.dart';
@@ -47,6 +48,10 @@ final appRouter = GoRouter(
         GoRoute(
           path: AppRoutes.history,
           builder: (_, __) => const ActivityHistoryPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.calendar,
+          builder: (_, __) => const CalendarPage(),
         ),
         GoRoute(
           path: AppRoutes.analytics,

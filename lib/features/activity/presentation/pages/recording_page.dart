@@ -5,7 +5,7 @@ import 'package:geolocator/geolocator.dart' hide ActivityType;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
-import 'package:stravski/core/theme/app_theme.dart';
+import 'package:hashiru/core/theme/app_theme.dart';
 
 import '../bloc/activity_bloc.dart';
 import '../bloc/activity_event.dart';
@@ -38,8 +38,6 @@ class _RecordingPageState extends State<RecordingPage>
   double _lastDistance = 0;
   double _lastPace = 0;
   double _lastSpeed = 0;
-  bool _lastIsPaused = false;
-
   @override
   void initState() {
     super.initState();
@@ -89,14 +87,6 @@ class _RecordingPageState extends State<RecordingPage>
 
   void _stopActivity() {
     context.read<ActivityBloc>().add(const ActivityStopTracking());
-  }
-
-  void _pauseActivity(bool isPaused) {
-    if (isPaused) {
-      context.read<ActivityBloc>().add(const ActivityResumeTracking());
-    } else {
-      context.read<ActivityBloc>().add(const ActivityPauseTracking());
-    }
   }
 
   void _updateCameraToLocation(LatLng location) {
@@ -362,8 +352,7 @@ class _RecordingPageState extends State<RecordingPage>
                   if (prev is! ActivityTracking) return true;
                   return prev.elapsed != curr.elapsed ||
                       prev.distanceMeters != curr.distanceMeters ||
-                      prev.speedKmH != curr.speedKmH ||
-                      prev.isPaused != curr.isPaused;
+                      prev.speedKmH != curr.speedKmH;
                 },
                 builder: (context, state) {
                   // Update cache whenever we get fresh tracking data.
@@ -372,7 +361,6 @@ class _RecordingPageState extends State<RecordingPage>
                     _lastDistance = state.distanceMeters;
                     _lastPace = state.paceMinPerKm;
                     _lastSpeed = state.speedKmH;
-                    _lastIsPaused = state.isPaused;
                   }
                   // Always use cached values — never drops to zero.
                   return Positioned(
@@ -384,7 +372,6 @@ class _RecordingPageState extends State<RecordingPage>
                       duration: _lastElapsed,
                       pace: _lastPace,
                       speed: _lastSpeed,
-                      isPaused: _lastIsPaused,
                     ),
                   );
                 },
@@ -396,12 +383,8 @@ class _RecordingPageState extends State<RecordingPage>
               left: 0,
               right: 0,
               child: BlocBuilder<ActivityBloc, ActivityState>(
-                // Only rebuild when isPaused toggles; parent setState handles
-                // _isStarted changes so no extra buildWhen needed for that.
+                // Only rebuild when type changes
                 buildWhen: (prev, curr) {
-                  if (prev is ActivityTracking && curr is ActivityTracking) {
-                    return prev.isPaused != curr.isPaused;
-                  }
                   return prev.runtimeType != curr.runtimeType;
                 },
                 builder: (context, state) {
@@ -417,22 +400,10 @@ class _RecordingPageState extends State<RecordingPage>
                       ),
                     );
                   }
-                  // Activity has started — show pause/stop immediately.
-                  // If bloc is still initializing (ActivityLoading), buttons
-                  // are shown but pause/stop fire events that queue safely.
-                  final isPaused =
-                      state is ActivityTracking ? state.isPaused : false;
+                  // Activity has started — show stop immediately.
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _CircleIconButton(
-                        icon: isPaused
-                            ? Icons.play_arrow_rounded
-                            : Icons.pause_rounded,
-                        color: AppTheme.mainOrange,
-                        onTap: () => _pauseActivity(isPaused),
-                      ),
-                      const SizedBox(width: 24),
                       _CircleIconButton(
                         icon: Icons.stop_rounded,
                         color: AppTheme.mainred,
